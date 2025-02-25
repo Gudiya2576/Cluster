@@ -95,13 +95,11 @@ var greenest7 = withNDVI7.qualityMosaic('NDVI').select(['B2','B3','B4','B5','B8'
 Map.addLayer(greenest5,{bands:['B8','B4','B3'],min:0,max:5000},'Sen_DEC1FN');
 //Map.addLayer(greenest7,{bands:['B8','B4','B3'],min:0,max:5000},'Sen_FEB2FN');
 
-
 var ndvi1 = greenest1.normalizedDifference(['B8','B4']).rename('NDVI1_oct');
 var ndvi2 = greenest2.normalizedDifference(['B8','B4']).rename('NDVI2_oct');
 var ndvi3 = greenest3.normalizedDifference(['B8','B4']).rename('NDVI3_nov');
 var ndvi5 = greenest5.normalizedDifference(['B8','B4']).rename('NDVI5_dec');
 var ndvi7 = greenest7.normalizedDifference(['B8','B4']).rename('NDVI7_feb');
-
 
 // create Stacked Ndvi
 var stacked_ndvi = ndvi1.addBands([ndvi2, ndvi3,ndvi5,ndvi7]);
@@ -110,7 +108,6 @@ Map.addLayer(stacked_ndvi, {bands:['NDVI2_oct', 'NDVI5_dec', 'NDVI3_nov'], min:-
 print(stacked_ndvi,"stacked_ndvi");
 
 //*********************************************************************
-
  // Scale values to 0-1
 var g1 = greenest1.select(['B11', 'B5']).rename('g4_b11','g4_b5');
 var g2 = greenest2.select(['B11', 'B5']).rename('g4_b11','g4_b5');
@@ -129,8 +126,6 @@ var training = stacked_ndvi.sample({
 //***************************************************************************
 var clusterer = ee.Clusterer.wekaKMeans(10).train(training);
 var clustered = stacked_ndvi.cluster(clusterer);
-
-
 // Get unique cluster values
 var clusterValues = clustered.reduceRegion({
   reducer: ee.Reducer.frequencyHistogram(),
@@ -141,8 +136,7 @@ var clusterValues = clustered.reduceRegion({
 
 print("Detected cluster 10 values:", clusterValues);
 Map.addLayer(clustered.randomVisualizer(), {}, 'K-Means Clustering');
-
-
+// choose the correct patch for potato
 var cluster0 = clustered.eq(6);
 var cluster1 = clustered.eq(2);
  Map.addLayer(cluster0.updateMask(cluster0),{min: 0, max: 1, palette: ['green']}, 'cluster0');
@@ -176,9 +170,7 @@ print("Detected cluster values:", clusterValues);
 // Step 4: Visualize the sub-clusters
 Map.addLayer(subClustered.randomVisualizer(), {}, 'Sub-Clusters of Cluster 6');
 
-
-
-//*********************************************************************************
+//Area Calculation
 var potato = clustered.eq(6);
 //Counting number of pixels in class and area  
 var class_pix1=potato
@@ -193,9 +185,6 @@ var class_pix1=potato
 
 print('Total detected Potato fields in Ha: ')
 print(ee.Number.parse(class_pix1).divide(1000));
-
-
-
 
 
 Map.addLayer(cluster1.selfMask(), {palette: ['blue']}, 'Cluster3');
